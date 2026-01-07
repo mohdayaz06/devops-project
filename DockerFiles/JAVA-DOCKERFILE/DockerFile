@@ -3,15 +3,23 @@ FROM eclipse-temurin:21-jdk AS builder
 
 WORKDIR /usr/src/app
 
-# Copy gradle wrapper & build files first (caching)
-COPY gradlew ./
-COPY gradle ./gradle
-COPY settings.gradle* build.gradle ./
+# Copy Gradle wrapper & build files first (for caching)
+COPY src/ad/gradlew ./gradlew
+COPY src/ad/gradle ./gradle
+COPY src/ad/settings.gradle* ./ 
+COPY src/ad/build.gradle ./
 
 RUN chmod +x gradlew
 
-# Copy the application source
-COPY . .
+# Copy proto files from repo root
+COPY pb ./proto
+
+# Copy Java source code
+COPY src/ad/src ./src
+
+# Generate Java classes from protobuf
+RUN ./gradlew downloadRepos
+RUN ./gradlew generateProto
 
 # Build the app
 RUN ./gradlew installDist
@@ -21,9 +29,12 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /usr/src/app
 
+# Copy built artifacts from builder
 COPY --from=builder /usr/src/app/build/install /usr/src/app/build/install
 
+# Set port
 ENV AD_PORT=9099
 EXPOSE 9099
 
+# Run the service
 ENTRYPOINT ["./build/install/opentelemetry-demo-ad/bin/Ad"]
