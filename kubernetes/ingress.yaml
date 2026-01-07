@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: opentelemetry-demo-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /()(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: opentelemetry-demo-frontend
+            port:
+              number: 8080
+
+      - path: /cart(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: opentelemetry-demo-cartservice
+            port:
+              number: 8080
+
+      - path: /checkout(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: opentelemetry-demo-checkoutservice
+            port:
+              number: 8080
+
+      - path: /recommendation(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: opentelemetry-demo-recommendationservice
+            port:
+              number: 8080
